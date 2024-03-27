@@ -1,39 +1,21 @@
-# Module 1 Group Assignment
-
-CSCI 5117, Spring 2024, [assignment description](https://canvas.umn.edu/courses/413159/pages/project-1)
-
 ## App Info:
 
-* Team Name: Team Ice Water
 * App Name: NovelNotes
 * App Link: [Link](https://project-1-ice-water.onrender.com/)
 
-### Students
-
-* Alan Hagedorn, haged077@umn.edu
-* Andrei Anicescu, anice002@umn.edu
-* Jabir Dhamuke, dhamu003@umn.edu
-* Issac Mohammed Nur, moha1187@umn.edu
-
 
 ## Key Features
-
-**Describe the most challenging features you implemented
-(one sentence per bullet, maximum 4 bullets):**
 
 * Used the [Google Books API](https://developers.google.com/books/docs/overview) to load information about books and support book search.
 * Implemented an up/down voting system, as well as comments to support interactivity with book reviews.
 * New book recommendations based on a user's preferences, infered from their review history.
 
 
-* ...
-
 ## Testing Notes
 
 1. You can upload a custom pfp by going to `Profile` > `Clicking your PFP`
 2. Google's Book API does not feature deterministic ordering for searches. When you refresh book search, the order may change. Unfortunately there is no configuration that solves this, setting the order by parameter in the API did not resolve this.
 
-* ...
 
 
 ## Screenshots of Site
