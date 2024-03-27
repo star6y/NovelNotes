@@ -1,0 +1,58 @@
+{% extends 'template.html' %}
+
+{% block content %}
+<div class="main-content">
+
+    <div class="center-content mt-5per font-large">
+        <h1>Discover Your Next Read! <span class="shake-rocket">🚀</span></h1>
+        <p>Enter a prompt and we'll suggest some books for you to read!</p>
+        <p class="font-sm"><i>Powered by GPT-3.5</i></p>
+    </div>
+
+    <div class="center-content">
+        <form id="suggest-book-form" class="pure-form-stacked pure-form">
+            <input type="text" name="prompt" placeholder='"Dystopian Novels", "Personal Finance", etc.' id="prompt" required minlength="3" maxlength="100" class="prompt-text">
+            <div class="center-content mt-20">
+                <div class="form-group">
+                    <label for="include-preferences">
+                        <input type="checkbox" id="include-preferences" name="include-preferences" checked>
+                        Include my book preferences from previous reviews
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary mt-20" id="form-submit">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="suggested-books" style="display: none">
+        <div class="center-content mt-20">
+            <h1>Suggested Books</h1>
+            <div id="loading" class="loader"></div>
+            <div id="suggested-books-list" class="pure-g w-80" style="display: flex; gap: 10px; flex-wrap: nowrap;"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}  
+{% block scripts %}
+<script>
+    const suggestedBooks = document.getElementById("suggested-books");
+    const loading = document.getElementById("loading");
+    const form = document.getElementById("suggest-book-form");
+    const formSubmit = document.getElementById("form-submit");
+    const suggestedBooksList = document.getElementById("suggested-books-list");
+    
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        formSubmit.disabled = true;
+        loading.style.display = "block";
+        suggestedBooks.style.display = "block";
+        suggestedBooksList.innerHTML = "";
+
+        const prompt = document.getElementById("prompt").value;
+        const include_preferences = document.getElementById("include-preferences").checked;
+        suggestBooks(prompt, include_preferences);
+    });
+</script>
+<script src="/static/scripts/SuggestBooks.js"></script>
+{% endblock %}

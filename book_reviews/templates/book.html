@@ -1,0 +1,209 @@
+{% extends 'template.html' %}
+
+{% block content %}
+<div class="book-detail-view mt-40">
+    <img src="{{ book.thumbnail }}" alt="Book Cover">
+    <div class="book-description">
+        <h1>{{ book.title }}</h1>
+        <h2 class="authors">{{ ', '.join(book.authors) }}</p>
+        {% if reviews %}
+            <h3>Community Rating: {{ average_score }} / 5.0</h3>
+            {% if user_review %}
+                <h3>Your Rating: {{ user_review.review_score }} / 5.0</h3>
+            {% endif %}
+        {% else %}
+            <h3>No reviews yet</h3>
+        {% endif %}
+        {{ book.description|safe }}
+        <hr class="m-20">
+        <p>Published by {{ book.publisher }}, {{ book.published_date }}</p>
+        <p>{{ book.pages }} pages</p>
+    </div>
+</div>
+<div class="center-content mt-40">
+    <h2>Reviews</h2>
+    <hr class="w-50">
+    <div class="w-80">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="center-content  {{ category }}">
+                    <p class="flash-message">{{ message }}</p>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% if not session.user %}
+        <div class="center-content mt-20">
+            <h3><a href="{{ url_for('auth.login') }}">Log in</a> to write a review</h3>
+        </div>
+        {% elif not user_review %}
+        <div class="center-content mt-20">
+            <button onclick="openCreateEditReviewModal('{{ book.book_id }}')" class="btn">Write Your Review!</button>
+        </div>
+        {% endif %}
+        {% for review in reviews %}
+            <div class="review-card soft-outline mw-30">
+                <div class="space-between-start">
+                    <img src="/profilePicture/{{ review.reviewer.username }}" alt="Profile Picture" class="profilePictureSmall">
+                    <div class="review-comment-content">
+                        <div class="review-header">
+                            <div class="author-heading">
+                                <h3><a href="{{ url_for('profile.profile', Username=review.reviewer.username)}}" style="color: black; text-decoration: none;">@{{ review.reviewer.username }}</a></h3>
+                                <p>Score: {{ review.review_score }}</p>
+                            </div>
+                            <div class="timestamps align-right">
+                                <p>{{ review.review_created_at }}</p>
+                                {% if review.review_created_at != review.review_updated_at %}
+                                    <p>Edited: {{ review.review_updated_at }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p>{{ review.review_text }}</p>
+                        <div class="review-card-likes">
+                            {% if session.user %}
+                            <div>
+                                {% if session.user.uid in review.like_uids %}
+                                <button class="button-no-style color-upvote" onclick="unlikeReview('{{ review.review_id }}', '{{ review.review_id }}')" id="upvote-{{review.review_id}}">⬆</button>
+                                {% else %}
+                                <button class="button-no-style" onclick="likeReview('{{ review.review_id }}')" id="upvote-{{review.review_id}}">⬆</button>
+                                {% endif %}
+                                <span id="like-count-{{ review.review_id }}"> {{ review.total_likes }} </span>
+                                {% if session.user.uid in review.dislike_uids %}
+                                <button class="button-no-style color-downvote" onclick="undislikeReview('{{ review.review_id }}')" id="downvote-{{review.review_id}}">⬇</button>
+                                {% else %}
+                                <button class="button-no-style" onclick="dislikeReview('{{ review.review_id }}')" id="downvote-{{review.review_id}}">⬇</button>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div>
+                                <button class="button-no-style" onclick="promptAuth()">⬆</button>
+                                <span> {{ review.total_likes }} </span>
+                                <button class="button-no-style" onclick="promptAuth()">⬇</button>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <button 
+                                    class="button-no-style" 
+                                    onclick="openCommentModal({{ review.to_js_object() }}, {{ session.user }})"
+                                    id="open-comment-modal-button-{{ review.review_id }}"
+                                >
+                                    {% if review.comments|length > 1 %}
+                                    View {{ review.comments|length }} comments
+                                    {% elif review.comments|length == 1 %}
+                                    View {{ review.comments|length }} comment
+                                    {% else %}
+                                    Add Comment
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                        {% if session.user and review.reviewer.id == session.user.uid %}
+                        <div class="align-right mt-20">
+                            <button class="btn" onclick="openCreateEditReviewModal('{{book.book_id}}', {{ review.to_js_object() }})">Edit</button>
+                            <button class="btn" onclick="openConfirmDeleteReviewModal('{{ book.book_id }}')">Delete</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!--Comments modal-->
+<div id="comment-modal" class="modal z-index-1">
+    <div class="modal-content auto-scroll">
+        <div class="review-card soft-outline w-600" id="review-card">
+            <div class="space-between-start">
+                <img alt="Profile Picture" class="profilePictureSmall">
+                <div class="review-comment-content">
+                    <div class="review-header">
+                        <div class="author-heading">
+                            <h3><a id="user-link"></a></h3>
+                            <p id="review-score"></p>
+                        </div>
+                        <div class="timestamps">
+                            <p id="review-created-at"></p>
+                            <p id="review-updated-at"></p>
+                        </div>
+                    </div>
+                    <p id="review-text"></p>
+                    <div class="review-card-likes">
+                        <div>
+                            <button id="modal-upvote" class="button-no-style" onclick="promptAuth()">⬆</button>
+                            <span id="modal-like-count"></span>
+                            <button id="modal-downvote" class="button-no-style" onclick="promptAuth()">⬇</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comment-thread" id="comment-thread">
+            <!-- Comments will be added here -->
+        </div>
+
+        <div class="center-content">
+            <button class="btn" onclick="closeCommentModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!--Create/edit review modal-->
+<div id="create-edit-review-modal" class="modal z-index-2">
+    <div class="create-edit-review-modal-content auto-scroll">
+        <form class="pure-form" id="review-form" method="POST">
+            <h2 id="create-edit-review-title"></h2>
+            <div class="center-content">
+                <label for="review_score">Rating: <output for="review_score" id="review_output">3</output></label>
+                <div class="star-rating">
+                    <input type="range" min="0" max="5" step="0.5" value="3" id="review_score" name="score">
+                </div>
+            </div>
+            <textarea name="text" id="review_text" class="pure-input-1 mt-20" rows="5" placeholder="Write your review here!" minlength="2" maxlength="2000" required></textarea>
+            <div class="center-content mt-20">
+                <button class="btn" type="submit">Submit</button>
+            </div>
+        </form>
+        <div class="center-content mt-20">
+            <button class="btn" onclick="closeReviewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!--Edit comment modal-->
+<div id="edit-comment-modal" class="modal z-index-2">
+    <div class="create-edit-comment-modal-content auto-scroll">
+        <form class="pure-form" method="POST" id="edit-comment-form">
+            <h2 id="create-edit-comment-title"></h2>
+            <textarea name="text" id="comment_text" class="pure-input-1 mt-20" rows="5" placeholder="Write your comment here!" minlength="2" maxlength="400" required></textarea>
+            <div class="center-content mt-20">
+                <button class="btn" type="submit">Submit</button>
+            </div>
+        </form>
+        <div class="center-content mt-20">
+            <button class="btn" onclick="closeEditCommentModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!--Confirm delete modal-->
+<div id="confirm-delete-modal" class="modal z-index-3">
+    <div class="confirm-delete-modal-content auto-scroll">
+        <h2 id="delete-confirm-text"></h2>
+        <div class="center-content">
+            <form class="pure-form" id="delete-form" method="POST">
+                <button class="btn" id="delete-button" type="submit">Yes</button>
+            </form>
+            <button class="btn mt-20" onclick="closeConfirmDeleteModal()" id="cancel-delete-button">No</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/scripts/Likes.js"></script>
+<script src="/static/scripts/Book.js"></script>
+{% endblock %}

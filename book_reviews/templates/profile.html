@@ -1,0 +1,320 @@
+{% extends 'template.html' %}
+
+{% block content %}
+<div class="main-content">
+    <div class="profile-welcome">
+        <div class="center-content mt-20">
+            {% if is_own_profile %}
+            <div class="relative">
+                <button class="editProfilePictureButton" id="edit-profile-picture" onclick="openProfilePictureModal()">
+                    <img src="profilePicture/{{ Profile_username }}" alt="Profile picture" class="profilePicture">
+                    <p class="editProfilePictureText">Edit</p>
+                </button>
+            </div>
+            {% else %}
+            <img src="profilePicture/{{ Profile_username }}" alt="Profile picture" class="profilePicture">
+            {% endif %}
+            <h1 style="color: white;">@{{ Profile_username }}</h1>
+        </div>
+    </div>
+
+    <!--Edit profile picture modal-->
+    <div id="profile-picture-modal" class="modal z-index-2">
+        <div class="edit-profile-picture-modal-content auto-scroll">
+            <form class="pure-form pure-form-stacked" action="{{ url_for('profile.upload_profile_picture') }}" method="POST" enctype="multipart/form-data">
+                <div class="center-content">
+                    <img id="pfp-preview" src="#" alt="Profile picture" class="profilePicture">
+                    <input id="pfp-input" type="file" name="profile_picture" accept=".png,.jpg,.jpeg" required onchange="previewImage()">
+                    <button type="submit" class="btn mt-20">Upload</button>
+                </div>
+            </form>
+            <div class="center-content mt-20">
+                <button class="btn" onclick="closeModal('profile-picture-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <section class="profile-reviews">
+        <div class="center-content mt-40">
+            {% if is_own_profile %}
+                <h2>Your book reviews 📚</h2>
+            {% else %}
+                <h2>{{ Profile_username }}'s book reviews 📚</h2>
+            {% endif %}
+            <hr class="w-50">
+        </div>
+        {%if Current_page != 0%}
+        <!--  Show any flash messages  -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="center-content  {{ category }}">
+                    <p class="flash-message">{{ message }}</p>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="reviews-box">
+            <div class="reviews">
+                {% for book in books %}
+                <div class="review-book border" id="{{ book.book_id }}">
+                    <div class="details-container">
+                        <div class="thumbnail-container">
+                            {% if book.thumbnail %}
+                            <a href="{{ url_for('book.book', book_id=book.book_id) }}"><img src="{{ book.thumbnail }}" alt="Book cover"></a>
+                            {% endif %}
+                        </div>
+                        <div class="center-content">
+                            <div class="book-title">
+                                {{ book.title }}
+                                {% if book.title|length > 70 %}
+                                <span id="title-dots{{ book.id }}">...</span>
+                                <!-- <span id="title-more{{ book.id }}" style="display: none;">{{ book.title[50:] }}</span> -->
+                                {% endif %}
+                            </div> 
+                        </div>
+                        <div onclick='openReviewTextModal("{{ book.title }}", {{ book.review_text | tojson | safe }})'>
+                            <div class="review-review" >
+                                <p><b>Rating: {{ book.review_score }} / 5</b></p>
+                                <p id="review-text{{ book.id }}">
+                                    {{ book.review_text[:300] }}
+                                </p>
+                            </div>
+                            {% if book.review_text|length > 250 %}
+                                <div class="profile-click-more-info">Expand text</div>
+                            {% endif %}
+                        </div>
+                    </div> 
+                    <div class="space-between-end">
+                        <div class="timestamps">
+                            <p>{{ book.created_at }}</p>
+                            {% if book.created_at != book.updated_at %}
+                                <p>Edited: {{ book.updated_at }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="button-rating-container">
+                            <div class="button-container" style="display: flex; gap: 5px;">
+                                <a href="{{ url_for('book.book', book_id=book.book_id, review=book.id )}}" class="text-decoration-none btn">View</a>
+                                {% if is_own_profile %}
+                                <button class="btn" onclick='openEditReviewModal("{{ book.id }}", "{{ book.title}}", "{{ book.review_score }}", {{ book.review_text | tojson | safe }})'>Edit</button>
+                                <button class="btn" onclick="openConfirmDeleteModal('{{ book.id }}')">Delete</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--  REVIEW MODAL  -->
+                <div id="create-edit-review-modal" class="modal z-index-2">
+                    <div class="create-edit-review-modal-content  auto-scroll">
+                            <h2 id="delete-confirm-text"></h2>
+                        <form class="pure-form" action="{{ url_for('profile.edit_review') }}" method="POST">
+                            <h3 id="create-edit-review-title"></h3>
+                            <div class="center-content">                                
+                                <label for="review_score">Rating: <output for="review_score" id="review_output">{{ book.review_score }}</output></label>
+                                <div class="star-rating">
+                                    <input type="range" min="0" max="5" step="0.5" value="{{ book.review_score }}" id="review_score" name="review_score">
+                                </div>
+                            </div>
+                            <p>Edit your review:</p>
+                            <textarea name="review_text" id="review_text" class="pure-input-1" rows="5" required
+                                    placeholder="There is no review..." minlength="2" maxlength="2000">
+                            </textarea>
+                            <input type="hidden" id="review_id" name="review_id" value="">
+                            <input type="hidden" name="Book_page" value="{{ Current_page }}">
+                            <input type="hidden" name="Comment_page" value="{{ Current_Comment_page }}">
+                            <div class="center-content mt-20">
+                                <button class="btn">Confirm</button>
+                            </div>
+                        </form>
+                        <div class="center-content mt-20">
+                            <button class="btn" onclick="closeModal('create-edit-review-modal')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Confirm delete review modal-->
+                <div id="confirm-delete-modal" class="modal z-index-3">
+                    <div class="confirm-delete-modal-content  auto-scroll">
+                        <h2 id="delete-confirm-text">Are you sure you want to delete your review?</h2>
+                        <div class="center-content">
+                            <form class="pure-form" action="{{ url_for('profile.delete_review') }}" method="POST">
+                                <button class="btn" id="delete-button">Yes</button>
+                                <input type="hidden" id="delete_review_id" name="review_id" value="">
+                                <input type="hidden" name="Book_page" value="{{ Current_page }}">
+                                <input type="hidden" name="Comment_page" value="{{ Current_Comment_page }}">
+                            </form>
+                            <button class="btn mt-20" onclick="closeModal('confirm-delete-modal')" id="cancel-delete-button">No</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div id="review-text-modal" class="modal">
+                    <div class="modal-content  auto-scroll">
+                        <h2 id="modal-title"></h2>
+                        <p id="modal-text"></p>
+                        <div class="center-content close-long-text">
+                            <button class="btn" onclick="closeModal('review-text-modal')">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!--  Pagination  -->
+            <div>
+                <div class="pagination-controls">
+                    <div id="Comments_Pagination">
+                        <div class="font-large">
+                            {% if Book_pagination.has_previous %}
+                            <a href="{{ url_for('profile.profile') }}?Username={{Profile_username}}&Book_page={{ Book_pagination.previous_page }}&Comment_page={{ Current_Comment_page }}" class="btn" style="text-decoration: none;">
+                                Previous
+                            </a>
+                        {% endif %}
+                        <span class="page-counter">{{ Current_page}}</span>
+                        {% if Book_pagination.has_next %}
+                            <a href="{{ url_for('profile.profile') }}?Username={{Profile_username}}&Book_page={{ Book_pagination.next_page }}&Comment_page={{ Current_Comment_page }}" class="btn" style="text-decoration: none;">
+                                Next
+                            </a>
+                        {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {%elif (Current_page == 0) and (is_own_profile)%}
+        <div class="center-content mt-40">
+            <p>You have not made any reviews</p>
+        </div>
+        {%else%}
+        <div class="center-content mt-40">
+            <p>{{ Profile_username }} has not made any reviews</p>
+        </div>
+        {%endif%}
+    </section>
+    
+    <section class="profile-comments">
+        <div class="center-content mt-40">
+            {% if is_own_profile %}
+                <h2>Your comments 💬</h2>
+            {% else %}
+                <h2>{{ Profile_username }}'s comments 💬</h2>
+            {% endif %}
+            <hr class="w-50">
+        </div>
+        {%if Current_Comment_page != 0%}
+        <div class="comments-section">
+            <div class="comments">
+                {%for comment in User_Comments %}
+                    <!--  Comment -->
+                    <div class="profile-comment border">
+                        <div class="comment-text-container" onclick='openCommentTextModal({{ comment.text | tojson | safe }})'>
+                            <p>{{comment.text[:110]}}
+                            <!-- {% if comment.text|length > 110 %}
+                                ....
+                            {% endif %} -->
+                            </p>
+                        </div>
+                        <div class="space-between-end">
+                            <div class="timestamps">
+                                <p>{{ comment.created_at }}</p>
+                                {% if comment.created_at != comment.updated_at %}
+                                    <p>Edited: {{ comment.updated_at }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="comment-button-container" style="display: flex; gap: 5px">
+                                <a href="{{ url_for('book.book', book_id=comment.book_id, review=comment.review_id )}}" class="text-decoration-none btn">View</a>
+                                {% if is_own_profile %}
+                                <button class="btn" onclick='openEditCommentModal("{{ comment.comment_id }}", {{ comment.text | tojson | safe }})'>Edit</button>
+                                <button class="btn" onclick="openConfirmCommentDeleteModal('{{ comment.comment_id }}')">Delete</button>
+                                {%endif%}
+                            </div>
+                        </div>
+                    </div>
+                
+
+                    <!--  COMMENT MODAL  -->
+                    <div id="create-edit-comment-modal" class="modal z-index-2 ">
+                        <div class="create-edit-comment-modal-content  auto-scroll">
+                            <form class="pure-form" action="{{ url_for('profile.edit_comment') }}" method="POST">
+                                <!-- <h3 id="create-edit-comment-title"></h3> -->
+                                <p>Edit your comment:</p>
+                                <textarea name="comment_text" id="comment_text" class="pure-input-1" required
+                                    rows="5" placeholder="There is no comment..." minlength="2" maxlength="400">
+                                </textarea>
+                                <input type="hidden" id="comment_id" name="comment_id" value="">
+                                <input type="hidden" name="Book_page" value="{{ Current_page }}">
+                                <input type="hidden" name="Comment_page" value="{{ Current_Comment_page }}">
+                                <div class="center-content mt-20">
+                                    <button class="btn">Confirm</button>
+                                </div>
+                            </form>
+                            <div class="center-content mt-20">
+                                <button class="btn" onclick="closeModal('create-edit-comment-modal')">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Confirm delete comment modal -->
+                    <div id="confirm-delete-comment-modal" class="modal z-index-3">
+                        <div class="confirm-delete-modal-content  auto-scroll">
+                            <h2 id="delete-confirm-text">Are you sure you want to delete your comment?</h2>                                
+                            <div class="center-content">
+                                <form class="pure-form" action="{{ url_for('profile.delete_comment') }}" method="POST">
+                                    <button class="btn" id="delete-button">Yes</button>
+                                    <input type="hidden" id="delete_comment_id" name="comment_id" value="">
+                                    <input type="hidden" name="Book_page" value="{{ Current_page }}">
+                                    <input type="hidden" name="Comment_page" value="{{ Current_Comment_page }}">
+                                </form>
+                                <div >
+                                    <button class="btn mt-20" onclick="closeModal('confirm-delete-comment-modal')" id="cancel-delete-button">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}  
+            </div>
+
+            <div id="comment-text-modal" class="modal">
+                <div class="modal-content  auto-scroll">
+                    <p id="com-modal-text"></p>
+                    <div class="center-content close-long-text">
+                        <button class="btn" onclick="closeModal('comment-text-modal')">Close</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="Comments_Pagination">
+                <div class="font-large">   
+                {% if Comment_pagination.has_previous %}
+                    <a href="{{ url_for('profile.profile') }}?Username={{Profile_username}}&Book_page={{ Current_page }}&Comment_page={{ Comment_pagination.previous_page }}" class="btn" style="text-decoration: none;">
+                        Previous
+                    </a>
+                {% endif %}
+                <span class="page-counter">{{ Current_Comment_page}}</span>
+                {% if Comment_pagination.has_next %}
+                    <a href="{{ url_for('profile.profile') }}?Username={{Profile_username}}&Book_page={{ Current_page }}&Comment_page={{ Comment_pagination.next_page }}" class="btn" style="text-decoration: none;">
+                        Next
+                    </a>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {%elif (Current_Comment_page == 0) and (is_own_profile)%}
+        <div class="center-content mt-40">
+            <p>You have not made any comments</p>
+        </div>
+        {%else%}
+        <div class="center-content mt-40">
+            <p>{{ Profile_username }} has not made any comments</p>
+        </div>
+        {%endif%}
+    </section>
+</div>
+
+{% endblock %}  
+{% block scripts %}
+<script src="/static/scripts/Profile.js"></script>
+{% endblock %}

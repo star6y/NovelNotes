@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='animations.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"> 
+</head>
+<body>
+    <div class="header background-primary">
+        <div class="space-between x-large">
+            <a class="nav-link" href="{{ url_for('home.home') }}">Home 🏠</a>
+    
+            {% if display_search %}
+                <div class="center-horizontal-absolute">
+                    <form class="pure-form" method="get" action="{{ url_for('search.search') }}" style="display: flex; gap: 5px">
+                        <select name="search_type" class="search-dropdown">
+                            <option value="book">Books 📚</option>
+                            <option value="user">Users 🙋 </option>
+                        </select>
+                        <input name="search_text" type="text" class="search-input" placeholder="Search...">
+                        <button type="submit" class="btn">Search</button>
+                    </form>
+                </div>
+            {% endif %}
+    
+            {% if 'user' in session %}
+                <div style="display: flex;">
+                    <a class="nav-link" href="{{ url_for('recommend.suggest') }}">Discover ✨</a>
+                    <a class="nav-link" href="{{ url_for('profile.profile') }}?Username={{session.user.username}}">Profile</a>
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                </div>
+            {% else %}
+                <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <a href="{{ url_for('about.about') }}" style="color: white;">About Us</a>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>

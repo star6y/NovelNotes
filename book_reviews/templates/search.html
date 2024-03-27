@@ -1,0 +1,138 @@
+{% extends 'template.html' %}
+
+{% block content %}
+<section>
+    <div class="center-content mt-40 font-xl">
+        <h2><span class="look-down"><span class="grow-shrink">🔎</span>🤨</span> Search for books and users</h2>
+    </div>
+    
+    <div class="center-content mt-20 font-xl">
+        <form class="pure-form" method="get" action="{{ url_for('search.search') }}" style="display: flex; gap: 10px;">
+            <select name="search_type" class="search-dropdown" value="{{ search_type }}">
+                <option value="book" {% if search_type == 'book' %}selected{% endif %}>Books 📚</option>
+                <option value="user" {% if search_type == 'user' %}selected{% endif %}>Users 🙋 </option>
+            </select>
+            <input name="search_text" type="text" class="search-input wide-searchbar" placeholder="Search..." value="{{ search_text }}">
+            <button type="submit" class="btn">Search</button>
+        </form>
+    </div>
+</section>
+
+{% if books %}
+<section>
+    <div class="center-content mt-40">
+        <div class="pure-g w-80">
+            {% for book in books %}
+                <div class="pure-u-1-3">
+                    <div class="l-box">
+                        <a href="{{ url_for('book.book', book_id=book.book_id) }}" class="text-decoration-none">
+                            <div class="book-card-medium border">
+                                <img src="{{ book.thumbnail }}" alt="Book Cover">
+                                <h3>{{ book.title }}</h3>
+                                <p>{{ 'Authors' if book.authors | length > 1 else 'Author' }}: {{ ', '.join(book.authors) }}</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="font-large mt-40">
+            {% if pagination.has_previous %}
+                <a href="{{ url_for('search.search') }}?search_type={{ search_type }}&search_text={{ search_text }}&page={{ pagination.previous_page }}" class="btn" style="text-decoration: none;">
+                    Previous
+                </a>
+            {% endif %}
+            <span class="page-counter">{{ pagination.page }}</span>
+            {% if pagination.has_next %}
+                <a href="{{ url_for('search.search') }}?search_type={{ search_type }}&search_text={{ search_text }}&page={{ pagination.next_page }}" class="btn" style="text-decoration: none;">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% elif search_type == 'book' %}
+<section>
+    <div class="mt-40 center-content">
+        <h2>No books found</h2>
+        <p>Please check your search query and try again.</p>
+    </div>
+</section>
+{% endif %}
+
+{% if users %}
+<section>
+    <div class="center-content mt-40">
+        <div class="pure-g w-80">
+            {% for user in users %}
+                <div class="pure-u-1-3">
+                    <div class="l-box">
+                        <a href="{{ url_for('profile.profile', Username=user.username) }}" class="text-decoration-none">
+                            <div class="user-card-medium border">
+                                <div class="center-content">
+                                    <img src="/profilePicture/{{ user.username }}" alt="Profile Picture" class="profilePicture">
+                                    <!-- <img src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg" alt="Profile Picture"> -->
+                                </div>
+                                <h3>{{ user.username }}</h3>
+                                <p>{{ user.email }}</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="font-large mt-40">
+            {% if pagination.has_previous %}
+                <a href="{{ url_for('search.search') }}?search_type={{ search_type }}&search_text={{ search_text }}&page={{ pagination.previous_page }}" class="btn" style="text-decoration: none;">
+                    Previous
+                </a>
+            {% endif %}
+            <span class="page-counter">{{ pagination.page }}</span>
+            {% if pagination.has_next %}
+                <a href="{{ url_for('search.search') }}?search_type={{ search_type }}&search_text={{ search_text }}&page={{ pagination.next_page }}" class="btn" style="text-decoration: none;">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% elif search_type == 'user' %}
+<section>
+    <div class="mt-40 center-content">
+        <h2>No users found</h2>
+        <p>Please check your search query and try again.</p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function highlight(element, start, end) {
+        var text = element.innerHTML;
+        text = text.substring(0, start) + "<span class='highlight'>" + text.substring(start, end) + "</span>" + text.substring(end);
+        element.innerHTML = text;
+    }
+
+    var searchText = "{{ search_text }}";
+
+    if (searchText) {
+        // Highlight search text in book and user cards
+        var titles = document.querySelectorAll('.book-card-medium h3');
+        var authors = document.querySelectorAll('.book-card-medium p');
+        var usernames = document.querySelectorAll('.user-card-medium h3');
+        var emails = document.querySelectorAll('.user-card-medium p');
+        var searchable = [titles, authors, usernames, emails];
+
+        for (var i = 0; i < searchable.length; i++) {
+            var element = searchable[i];
+            element.forEach(function (card) {
+                var text = card.innerHTML;
+                var index = text.toLowerCase().indexOf(searchText.toLowerCase());
+                if (index !== -1) {
+                    highlight(card, index, index + searchText.length);
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

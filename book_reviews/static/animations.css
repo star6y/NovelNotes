@@ -1,0 +1,104 @@
+.grow-shrink {
+    animation-name: grow-shrink-animation;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+    transform-origin: 50% 50%;
+    display: inline-block;
+}
+
+@keyframes grow-shrink-animation {
+    0% { transform: scale(0.6) translateX(40px) translateY(15px) rotateY(0deg); }
+    25% { transform: scale(0.6) translateX(40px) translateY(15px) rotateY(0deg) }
+    50% { transform: scale(1.2) translateX(30px) translateY(0px) rotateY(180deg)}
+    75% { transform: scale(0.6) translateX(40px) translateY(15px) rotateY(0deg) }
+    100% { transform: scale(0.6) translateX(40px) translateY(15px) rotateY(0deg) }
+}
+
+/* Look down animation */
+.look-down {
+    animation-name: look-down-animation;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+    transform-origin: 50% 50%;
+    display: inline-block;
+}
+
+@keyframes look-down-animation {
+    0% { transform: rotate(0deg) }
+    25% { transform: rotate(0deg) }
+    50% { transform: rotate(-15deg) }
+    75% { transform: rotate(0deg) }
+    100% { transform: rotate(0deg) }
+}
+
+/* Hopping animation */
+.hop {
+    animation-name: hop-animation;
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    transform-origin: 50% 50%;
+    display: inline-block;
+}
+
+@keyframes hop-animation {
+    0% { transform: translateY(0px) }
+    25% { transform: translateY(0px) }
+    50% { transform: translateY(-8px) }
+    75% { transform: translateY(0px) }
+    100% { transform: translateY(0px) }
+}
+
+/* Waving animation credit: https://codepen.io/jakejarvis/pen/pBZWZw */
+.wave {
+    animation-name: wave-animation;
+    animation-duration: 2.5s;
+    animation-iteration-count: infinite;
+    transform-origin: 70% 70%;
+    display: inline-block;
+}
+  
+@keyframes wave-animation {
+    0% { transform: rotate( 0.0deg) }
+    10% { transform: rotate(14.0deg) }
+    20% { transform: rotate(-8.0deg) }
+    30% { transform: rotate(14.0deg) }
+    40% { transform: rotate(-4.0deg) }
+    50% { transform: rotate(10.0deg) }
+    60% { transform: rotate( 0.0deg) }
+    100% { transform: rotate( 0.0deg) }
+}
+
+.shake-rocket {
+    display: inline-block;
+    animation: shakeAscent 0.5s ease-in-out infinite;
+}
+
+@keyframes shakeAscent {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Source: https://www.w3schools.com/howto/howto_css_loader.asp */
+.loader {
+    border: 8px solid white;
+    border-radius: 50%;
+    border-top: 8px solid black;
+    width: 50px;
+    height: 50px;
+    -webkit-animation: spin 0.7s linear infinite;
+    animation: spin 0.7s linear infinite;
+  }
+  
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
