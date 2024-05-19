@@ -7,10 +7,20 @@ from book_reviews.data.queries import *
 from book_reviews.utils.display_objects.review import Review
 from book_reviews.utils.exceptions import UserNotFoundException
 
+# pool = ThreadedConnectionPool(
+#     1, 
+#     100, 
+#     dsn=env.get('POSTGRES_CONNECTION_STRING'), 
+#     sslmode='require'
+# )
+
 pool = ThreadedConnectionPool(
-    1, 
-    100, 
-    dsn=env.get('POSTGRES_CONNECTION_STRING'), 
+    1, 20,
+    dbname='andrei_db',
+    user='andrei_db_user',
+    password='Dszk8YpIrnRJKCgoYLbKr7DwEjpVdd4N',
+    host='dpg-cp3ts18cmk4c73ebmc60-a.ohio-postgres.render.com',
+    port='5432',
     sslmode='require'
 )
 

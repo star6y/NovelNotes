@@ -588,7 +588,7 @@ textarea {
 
 .star-rating {
     display: inline-block;
-    font-size: 0; /* remove white space between inline-block elements */
+    /* font-size: 0;  */  /* remove white space between inline-block elements */
 }
 /* ------------------------------------ Flash --------------------------------------------*/
 
@@ -596,7 +596,7 @@ textarea {
     border: 2px solid var(--primary-accent);
     border-radius: 20px;
     background-color: var(--backround-accent);
-    margin: 20px 20px 0 20px;
+    margin: 20epx 20px 0 20px;
     padding: 20px;
     width: 30%;
     /* text-align: center; */
